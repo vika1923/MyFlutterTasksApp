@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Task extends StatelessWidget{
+  
+  // final int hours ;
+  // final int minutes ;
+  // final String taskName ;
+
+  // Task({required this.hours, required this.minutes, required this.taskName});
+
   @override
   Widget build(BuildContext context){
     return ListTile(
