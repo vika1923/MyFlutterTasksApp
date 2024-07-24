@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:my_app1/hours.dart';
 
 class AddNewTask extends StatefulWidget {
@@ -10,11 +11,10 @@ class AddNewTask extends StatefulWidget {
 
 class _AddNewTaskState extends State<AddNewTask> {
   late TextEditingController controller;
-  late String taskName;
-  late int hours;
-  late int minutes;
-  Set<String> priority = {"medium"};
-
+  late String taskName = "(no name)";
+  late int hours = 0;
+  late int minutes = 0;
+  late String priority = "medium";
 
   @override
   void initState() {
@@ -29,14 +29,15 @@ class _AddNewTaskState extends State<AddNewTask> {
   }
 
   void saveTask() {
-    setState(() {
-      taskName = controller.text;
-      hours;
-      minutes;
-    });
+  try {
+    var box = Hive.box('tasksBox');
+    List<dynamic> taskData = [controller.text, hours, minutes, priority];
+    box.add(taskData);
     Navigator.of(context).pop();
-    print("$taskName, $hours, $minutes, $priority");
+  } catch (e) {
+    print("Error saving task: $e");
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,7 @@ class _AddNewTaskState extends State<AddNewTask> {
                       physics: const FixedExtentScrollPhysics(),
                       perspective: 0.005,
                       diameterRatio: 1.3,
-                      onSelectedItemChanged: (i){
+                      onSelectedItemChanged: (i) {
                         hours = i;
                       },
                       childDelegate: ListWheelChildBuilderDelegate(
@@ -90,8 +91,8 @@ class _AddNewTaskState extends State<AddNewTask> {
                       itemExtent: 25,
                       useMagnifier: true,
                       magnification: 1.3,
-                      onSelectedItemChanged: (i){
-                        minutes = i*10;
+                      onSelectedItemChanged: (i) {
+                        minutes = i * 10;
                       },
                       physics: const FixedExtentScrollPhysics(),
                       perspective: 0.005,
@@ -108,32 +109,33 @@ class _AddNewTaskState extends State<AddNewTask> {
               ),
             ),
             Row(
-            children: [
-              const Text("Priority: "),
-              SegmentedButton<String>(
-                showSelectedIcon: false,
-                segments: const <ButtonSegment<String>>[
-                  ButtonSegment<String>(
-                    value: "high",
-                    label:  Text("HIGH"),
-                  ),
-                  ButtonSegment<String>(
-                    value: "medium",
-                    label:  Text("MEDIUM"),
-                  ),
-                  ButtonSegment<String>(
-                    value: "low",
-                    label:  Text("LOW"),
-                  ),
-                ], selected: priority,
-                onSelectionChanged: (newSelected){
-                  setState(() {
-                    priority = newSelected;
-                  });
-                },
-              ),
-            ],
-          ),
+              children: [
+                const Text("Priority: "),
+                SegmentedButton<String>(
+                  showSelectedIcon: false,
+                  segments: const <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: "high",
+                      label: Text("HIGH"),
+                    ),
+                    ButtonSegment<String>(
+                      value: "medium",
+                      label: Text("MEDIUM"),
+                    ),
+                    ButtonSegment<String>(
+                      value: "low",
+                      label: Text("LOW"),
+                    ),
+                  ],
+                  selected: {priority},
+                  onSelectionChanged: (newSelected) {
+                    setState(() {
+                      priority = newSelected.first;
+                    });
+                  },
+                ),
+              ],
+            ),
             ElevatedButton(
               onPressed: () {
                 saveTask();
