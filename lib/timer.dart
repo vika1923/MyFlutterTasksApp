@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:hive/hive.dart';
+
 class MyTimer extends StatefulWidget {
   final int timeLeft;
   final String taskName;
-  final Function(bool) switchTimerRunning;
+  final Function(bool, int) switchTimerRunning;
   final bool noTimerIsRunning;
+  final int index;
+  final int? lastCountingTimerIndex;
 
-  const MyTimer({
-    super.key,
-    required this.timeLeft,
-    required this.taskName,
-    required this.switchTimerRunning,
-    required this.noTimerIsRunning
-  });
+  const MyTimer(
+      {super.key,
+      required this.timeLeft,
+      required this.taskName,
+      required this.switchTimerRunning,
+      required this.noTimerIsRunning,
+      required this.index,
+      required this.lastCountingTimerIndex});
 
   @override
   _MyTimerState createState() => _MyTimerState();
@@ -28,39 +33,55 @@ class _MyTimerState extends State<MyTimer> {
   void initState() {
     super.initState();
     timeLeft = widget.timeLeft;
+
+    if (widget.index == widget.lastCountingTimerIndex) {
+      startCountdown();
+      setState(() {
+        isNotRunning = false;
+      });
+    }
   }
 
   void startCountdown() {
-  if (isNotRunning) {
-    if(widget.noTimerIsRunning){
+    // print("start countdown function called");
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (timeLeft > 0) {
-          timeLeft--;
+          timeLeft -= 1;
         } else {
           timer.cancel();
         }
       });
     });
-    setState(() {
-      isNotRunning = false;
-      widget.switchTimerRunning(false);
-    });}
-  } else {
-    countdownTimer?.cancel();
-    setState(() {
-      isNotRunning = true;
-      widget.switchTimerRunning(true);
-    });
   }
-}
+
+  void startOrStopCountdown() {
+    // print("1");
+    if (isNotRunning) {
+      // print("2");
+      if (widget.noTimerIsRunning) {
+        // print("3");
+        startCountdown();
+        setState(() {
+          isNotRunning = false;
+          widget.switchTimerRunning(false, widget.index);
+        });
+      }
+    } else {
+      countdownTimer?.cancel();
+      setState(() {
+        isNotRunning = true;
+        widget.switchTimerRunning(true, widget.index);
+      });
+    }
+  }
 
   @override
   void dispose() {
     countdownTimer?.cancel();
-    if(!isNotRunning){
+    if (!isNotRunning) {
       setState(() {
-        widget.switchTimerRunning(true);
+        widget.switchTimerRunning(true, widget.index);
       });
     }
     super.dispose();
@@ -72,7 +93,7 @@ class _MyTimerState extends State<MyTimer> {
       children: [
         IconButton(
           icon: Icon(isNotRunning ? Icons.play_arrow : Icons.pause),
-          onPressed: startCountdown,
+          onPressed: startOrStopCountdown,
         ),
         Text(timeLeft.toString()),
       ],

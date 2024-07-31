@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:my_app1/task.dart';
 import 'package:my_app1/add_new_task.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox('tasksBox');
-
-  // SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(
       const MaterialApp(debugShowCheckedModeBanner: false, home: AllTasks()));
@@ -25,12 +24,15 @@ class AllTasks extends StatefulWidget {
 class _AllTasksState extends State<AllTasks> with WidgetsBindingObserver {
   List<List<dynamic>> tasks = [];
   bool noTimerIsRunning = true;
+  int? lastCountingTimerIndex;
+  late SharedPreferences prefs;
 
   @override
   void initState() {
     super.initState();
     loadTasks();
     WidgetsBinding.instance.addObserver(this);
+    _loadPreferences();
   }
 
   @override
@@ -39,23 +41,32 @@ class _AllTasksState extends State<AllTasks> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   super.didChangeAppLifecycleState(state);
-  //   if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-  //     // TO DO
-  //   }
-  // }
+  Future<void> _loadPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+
+    String dateTimeStr = prefs.getStringList("lastTimer")![1];
+    int? lastTimerIndex = int.tryParse(prefs.getStringList("lastTimer")![0]);
+
+    Duration difference = DateTime.now().difference(DateTime.parse(dateTimeStr));
+
+    // TO DO
+    print(lastTimerIndex);
+    print(difference.inSeconds);
+  }
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    super.didChangeAppLifecycleState(state);
+    // if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      await prefs.setStringList("lastTimer", [lastCountingTimerIndex.toString(), DateTime.now().toString()]);
+    // }
+  }
 
   void loadTasks() {
-    try {
-      var box = Hive.box('tasksBox');
-      setState(() {
-        tasks = box.values.toList().cast<List<dynamic>>();
-      });
-    } catch (e) {
-      print("Error loading tasks: $e");
-    }
+    var box = Hive.box('tasksBox');
+    setState(() {
+      tasks = box.values.toList().cast<List<dynamic>>();
+    });
   }
 
   void deleteTask(int index) {
@@ -72,10 +83,14 @@ class _AllTasksState extends State<AllTasks> with WidgetsBindingObserver {
     setState(() {
       tasks = [];
     });
-    print("Box deleted");
   }
 
-  void updateNoTimerIsRunning(bool isRunning) {
+  void updateNoTimerIsRunning(bool isRunning, index) {
+    if (isRunning == false){
+      lastCountingTimerIndex = index;
+    } else {
+      lastCountingTimerIndex = null;
+    }
     setState(() {
       noTimerIsRunning = isRunning;
     });
@@ -98,6 +113,8 @@ class _AllTasksState extends State<AllTasks> with WidgetsBindingObserver {
                   deleteTask: () => deleteTask(index),
                   switchTimerRunning: updateNoTimerIsRunning,
                   noTimerIsRunning: noTimerIsRunning,
+                  index: index,
+                  lastCountingTimerIndex: lastCountingTimerIndex,
                   key: ValueKey(tasks[index]),
                 );
               },
@@ -105,7 +122,6 @@ class _AllTasksState extends State<AllTasks> with WidgetsBindingObserver {
           ),
           IconButton(
             onPressed: () {
-              // deleteBox();
               showDialog(
                 context: context,
                 builder: (context) => const AddNewTask(),

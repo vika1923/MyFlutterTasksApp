@@ -8,8 +8,10 @@ class Task extends StatelessWidget {
   final String taskName;
   final String priority;
   final VoidCallback deleteTask;
-  final Function(bool) switchTimerRunning; // Add the callback here
+  final Function(bool, int) switchTimerRunning; // Add the callback here
   final bool noTimerIsRunning;
+  final int index;
+  final int? lastCountingTimerIndex;
 
   const Task({
     required this.hours,
@@ -19,6 +21,8 @@ class Task extends StatelessWidget {
     required this.deleteTask,
     required this.switchTimerRunning, // Accept the callback
     required this.noTimerIsRunning,
+    required this.index,
+    required this.lastCountingTimerIndex,
     super.key, // Accept a key as a parameter
   });
 
@@ -46,7 +50,7 @@ class Task extends StatelessWidget {
           trailing: SizedBox(
             width: 80,
             height: 70,
-            child: MyTimer(timeLeft: hours * 60 + minutes, taskName: taskName, switchTimerRunning: switchTimerRunning, noTimerIsRunning: noTimerIsRunning // Pass the callback),
+            child: MyTimer(timeLeft: hours * 60 + minutes, taskName: taskName, switchTimerRunning: switchTimerRunning, noTimerIsRunning: noTimerIsRunning, index: index, lastCountingTimerIndex: lastCountingTimerIndex // Pass the callback),
           ),
         ),
       ),
