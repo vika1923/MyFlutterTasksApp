@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class MyHours extends StatelessWidget {
 
   final int hours;
-  MyHours({required this.hours});
+  const MyHours({super.key, required this.hours});
 
   @override
   Widget build(BuildContext context) {

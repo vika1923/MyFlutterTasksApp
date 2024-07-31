@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-// Timer class 12345
 class MyTimer extends StatefulWidget {
   final int timeLeft;
   final String taskName;
+  final Function(bool) switchTimerRunning;
+  final bool noTimerIsRunning;
 
-  MyTimer({required this.timeLeft, required this.taskName});
+  const MyTimer({
+    super.key,
+    required this.timeLeft,
+    required this.taskName,
+    required this.switchTimerRunning,
+    required this.noTimerIsRunning
+  });
 
   @override
   _MyTimerState createState() => _MyTimerState();
@@ -24,45 +31,51 @@ class _MyTimerState extends State<MyTimer> {
   }
 
   void startCountdown() {
-    if (isNotRunning) {
-      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-        setState(() {
-          if (timeLeft > 0) {
-            timeLeft--;
-          } else {
-            timer.cancel();
-          }
-        });
-      });
+  if (isNotRunning) {
+    if(widget.noTimerIsRunning){
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        isNotRunning = false;
+        if (timeLeft > 0) {
+          timeLeft--;
+        } else {
+          timer.cancel();
+        }
       });
-    } else {
-      countdownTimer?.cancel();
-      setState(() {
-        isNotRunning = true;
-      });
-    }
+    });
+    setState(() {
+      isNotRunning = false;
+      widget.switchTimerRunning(false);
+    });}
+  } else {
+    countdownTimer?.cancel();
+    setState(() {
+      isNotRunning = true;
+      widget.switchTimerRunning(true);
+    });
   }
+}
 
   @override
   void dispose() {
     countdownTimer?.cancel();
+    if(!isNotRunning){
+      setState(() {
+        widget.switchTimerRunning(true);
+      });
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(isNotRunning ? Icons.play_arrow : Icons.pause),
-            onPressed: startCountdown,
-          ),
-          Text(timeLeft.toString()),
-        ],
-      ),
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(isNotRunning ? Icons.play_arrow : Icons.pause),
+          onPressed: startCountdown,
+        ),
+        Text(timeLeft.toString()),
+      ],
     );
   }
 }

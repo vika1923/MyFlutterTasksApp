@@ -2,21 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:my_app1/timer.dart';
 
 class Task extends StatelessWidget {
+
   final int hours;
   final int minutes;
   final String taskName;
   final String priority;
   final VoidCallback deleteTask;
+  final Function(bool) switchTimerRunning; // Add the callback here
+  final bool noTimerIsRunning;
 
-  Task({
+  const Task({
     required this.hours,
     required this.minutes,
     required this.taskName,
     required this.priority,
     required this.deleteTask,
-    Key? key, // Accept a key as a parameter
-  }) : super(key: key);
+    required this.switchTimerRunning, // Accept the callback
+    required this.noTimerIsRunning,
+    super.key, // Accept a key as a parameter
+  });
 
+  int priorityToColor(String priority){
+    return (["low", "medium", "high"].indexOf(priority)) * 50;
+  }
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -24,7 +32,7 @@ class Task extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.blue[100],
+          color: Colors.blue[priorityToColor(priority)],
         ),
         child: ListTile(
           minVerticalPadding: 20,
@@ -35,13 +43,13 @@ class Task extends StatelessWidget {
             icon: const Icon(Icons.delete_outlined),
             onPressed: deleteTask,
           ),
-          trailing: Container(
+          trailing: SizedBox(
             width: 80,
             height: 70,
-            child: MyTimer(timeLeft: hours * 60 + minutes, taskName: taskName),
+            child: MyTimer(timeLeft: hours * 60 + minutes, taskName: taskName, switchTimerRunning: switchTimerRunning, noTimerIsRunning: noTimerIsRunning // Pass the callback),
           ),
         ),
       ),
-    );
+    ));
   }
 }
